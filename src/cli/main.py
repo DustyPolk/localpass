@@ -327,11 +327,11 @@ def add(
             else:
                 if not quiet:
                     panel = Panel(
-                        f"[green]✓[/green] Password added successfully\\n"
-                        f"  Service: {service}\\n"
+                        f"[green]✓[/green] Password added successfully\n"
+                        f"  Service: {service}\n"
                         f"  Username: {username}" + 
-                        (f"\\n  URL: {url}" if url else "") +
-                        (f"\\n  Notes: [dim]Added[/dim]" if notes else ""),
+                        (f"\n  URL: {url}" if url else "") +
+                        (f"\n  Notes: [dim]Added[/dim]" if notes else ""),
                         border_style="green",
                         padding=(0, 1)
                     )
@@ -755,9 +755,9 @@ def update(
                         updated_fields.append("notes")
                     
                     panel = Panel(
-                        f"[green]✓[/green] Password entry updated successfully\\n"
-                        f"  Service: {service}\\n"
-                        f"  Username: {username}\\n"
+                        f"[green]✓[/green] Password entry updated successfully\n"
+                        f"  Service: {service}\n"
+                        f"  Username: {username}\n"
                         f"  Updated: {', '.join(updated_fields)}",
                         border_style="green",
                         padding=(0, 1)
@@ -852,8 +852,8 @@ def delete(
             else:
                 if not quiet:
                     panel = Panel(
-                        f"[green]✓[/green] Password entry deleted successfully\\n"
-                        f"  Service: {service}\\n"
+                        f"[green]✓[/green] Password entry deleted successfully\n"
+                        f"  Service: {service}\n"
                         f"  Username: {username}",
                         border_style="green",
                         padding=(0, 1)
