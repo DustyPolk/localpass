@@ -1,28 +1,28 @@
-# LocalPass =
+# LocalPass :lock:
 
 **A secure, minimalist CLI password manager following Unix philosophy**
 
 LocalPass is a production-ready password manager that prioritizes security, simplicity, and scriptability. Built with enterprise-grade cryptography and designed for both human users and automation scripts.
 
-## ( Features
+## :sparkles: Features
 
-- = **Enterprise Security**: Argon2id password hashing, AES-256-GCM encryption, PBKDF2 key derivation
-- <� **Beautiful CLI**: Rich formatting with tables and panels for human-readable output
-- > **JSON API**: Machine-readable output for scripting and automation
-- = **Password Generation**: Secure password generator with customizable parameters
-- =� **Account Protection**: Automatic lockout after failed attempts, session timeouts
-- < **Cross-Platform**: Works on Linux, macOS, and Windows with secure file permissions
-- =� **Password Analysis**: Strength assessment and security recommendations
-- = **Search & Filter**: Find passwords quickly with pattern matching
-- =� **Clipboard Integration**: Optional clipboard support for password copying
+- :lock: **Enterprise Security**: Argon2id password hashing, AES-256-GCM encryption, PBKDF2 key derivation
+- :art: **Beautiful CLI**: Rich formatting with tables and panels for human-readable output
+- :robot: **JSON API**: Machine-readable output for scripting and automation
+- :key: **Password Generation**: Secure password generator with customizable parameters
+- :shield: **Account Protection**: Automatic lockout after failed attempts, session timeouts
+- :earth_americas: **Cross-Platform**: Works on Linux, macOS, and Windows with secure file permissions
+- :bar_chart: **Password Analysis**: Strength assessment and security recommendations
+- :mag: **Search & Filter**: Find passwords quickly with pattern matching
+- :clipboard: **Clipboard Integration**: Optional clipboard support for password copying
 
-## =� Quick Start
+## :rocket: Quick Start
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/DustyPolk/localpass.git
 cd localpass
 
 # Install with uv (recommended)
@@ -72,7 +72,7 @@ uv run localpass update github myuser --generate
 uv run localpass delete github myuser
 ```
 
-## =� Complete CLI Reference
+## :book: Complete CLI Reference
 
 ### `init` - Initialize Password Manager
 
@@ -333,7 +333,7 @@ Display LocalPass version information.
 uv run localpass version
 ```
 
-## = Security Architecture
+## :lock: Security Architecture
 
 ### Cryptographic Standards
 
@@ -365,7 +365,7 @@ LocalPass implements multiple layers of security using industry-standard algorit
 - **Location**: Platform-specific secure directories
   - Linux: `~/.local/share/localpass/`
   - macOS: `~/Library/Application Support/LocalPass/`
-  - Windows: `%APPDATA%\\LocalPass\\`
+  - Windows: `%APPDATA%\LocalPass\`
 
 #### Cross-Platform Security
 - **Windows**: Uses DPAPI for additional protection
@@ -390,30 +390,30 @@ LocalPass implements multiple layers of security using industry-standard algorit
 
 LocalPass protects against:
 
- **Password Database Theft**: Strong encryption renders stolen database useless
- **Brute Force Attacks**: Argon2id makes password cracking computationally expensive
- **Memory Dumps**: Sensitive data cleared from memory after use
- **Timing Attacks**: Consistent operation timing prevents information leakage
- **Replay Attacks**: Unique nonces prevent ciphertext reuse
- **Privilege Escalation**: Secure file permissions limit access
- **Data Integrity**: GCM authentication prevents tampering
+:white_check_mark: **Password Database Theft**: Strong encryption renders stolen database useless  
+:white_check_mark: **Brute Force Attacks**: Argon2id makes password cracking computationally expensive  
+:white_check_mark: **Memory Dumps**: Sensitive data cleared from memory after use  
+:white_check_mark: **Timing Attacks**: Consistent operation timing prevents information leakage  
+:white_check_mark: **Replay Attacks**: Unique nonces prevent ciphertext reuse  
+:white_check_mark: **Privilege Escalation**: Secure file permissions limit access  
+:white_check_mark: **Data Integrity**: GCM authentication prevents tampering
 
-## =� Development
+## :hammer_and_wrench: Development
 
 ### Project Structure
 
 ```
 localpass/
-   src/
-      cli/           # Command-line interface
-      models/        # Data models
-      services/      # Business logic services
-      utils/         # Utility functions
-   tests/
-      contract/      # Contract/integration tests
-      integration/   # End-to-end tests
-   specs/             # Feature specifications
-   scripts/           # Development scripts
+├── src/
+│   ├── cli/           # Command-line interface
+│   ├── models/        # Data models
+│   ├── services/      # Business logic services
+│   └── utils/         # Utility functions
+├── tests/
+│   ├── contract/      # Contract/integration tests
+│   └── integration/   # End-to-end tests
+├── specs/             # Feature specifications
+└── scripts/           # Development scripts
 ```
 
 ### Running Tests
@@ -447,7 +447,7 @@ uv run pytest --cov=src
 # Merge to master when complete
 ```
 
-## =' Configuration
+## :wrench: Configuration
 
 ### Environment Variables
 
@@ -471,7 +471,7 @@ export LOCALPASS_SESSION_TIMEOUT=30
 uv run localpass auth
 ```
 
-## > Scripting and Automation
+## :handshake: Scripting and Automation
 
 ### JSON API Examples
 
@@ -479,12 +479,12 @@ LocalPass provides machine-readable JSON output for all operations:
 
 ```bash
 # Initialize and capture database path
-INIT_RESULT=$(echo -e "password\\npassword" | uv run localpass init --format json)
+INIT_RESULT=$(echo -e "password\npassword" | uv run localpass init --format json)
 DB_PATH=$(echo "$INIT_RESULT" | jq -r '.database_path')
 
 # Add multiple passwords from a script
 while IFS=',' read -r service username password url; do
-    echo -e "masterpass\\n$password" | uv run localpass add "$service" \
+    echo -e "masterpass\n$password" | uv run localpass add "$service" \
         --username "$username" --url "$url" --format json
 done < passwords.csv
 
@@ -536,14 +536,14 @@ for service in "${SERVICES[@]}"; do
         --generate --length 24 --format json)
     
     if echo "$result" | jq -e '.status == "success"' > /dev/null; then
-        echo " $service password rotated successfully"
+        echo "✓ $service password rotated successfully"
     else
-        echo " Failed to rotate $service password"
+        echo "✗ Failed to rotate $service password"
     fi
 done
 ```
 
-## = Troubleshooting
+## :bug: Troubleshooting
 
 ### Common Issues
 
@@ -618,55 +618,55 @@ ls -la ~/.local/share/localpass/
 sqlite3 ~/.local/share/localpass/passwords.db ".schema"
 ```
 
-## S FAQ
+## :question: FAQ
 
 ### General Questions
 
-**Q: How secure is LocalPass compared to other password managers?**
+**Q: How secure is LocalPass compared to other password managers?**  
 A: LocalPass uses enterprise-grade cryptography (Argon2id, AES-256-GCM) with security parameters matching or exceeding commercial solutions. The zero-knowledge architecture ensures even database theft doesn't compromise your passwords.
 
-**Q: Can I use LocalPass on multiple devices?**
+**Q: Can I use LocalPass on multiple devices?**  
 A: LocalPass is designed as a local-first tool. For multi-device sync, you can manually copy the encrypted database file, but consider the security implications of cloud storage.
 
-**Q: What happens if I forget my master password?**
+**Q: What happens if I forget my master password?**  
 A: There's no recovery mechanism by design. The zero-knowledge architecture means your master password cannot be recovered - you'll need to reinitialize and lose access to existing passwords.
 
 ### Technical Questions
 
-**Q: Why does authentication take so long?**
+**Q: Why does authentication take so long?**  
 A: The ~1-2 second delay is intentional security - Argon2id with 100MB memory cost makes brute force attacks computationally expensive.
 
-**Q: Can I change the security parameters?**
+**Q: Can I change the security parameters?**  
 A: Security parameters are hardcoded to ensure consistent protection. Modifying them would require code changes and database migration.
 
-**Q: How does LocalPass compare to browser password managers?**
+**Q: How does LocalPass compare to browser password managers?**  
 A: LocalPass offers stronger encryption, local storage, CLI accessibility, and scriptability, but requires more technical knowledge than browser managers.
 
 ### Usage Questions
 
-**Q: Can I export my passwords to other managers?**
+**Q: Can I export my passwords to other managers?**  
 A: Use the JSON API to export data:
 ```bash
 echo "masterpass" | uv run localpass list-passwords --format json > export.json
 ```
 
-**Q: How do I backup my passwords?**
+**Q: How do I backup my passwords?**  
 A: Copy the encrypted database file:
 ```bash
 cp ~/.local/share/localpass/passwords.db backup-$(date +%Y%m%d).db
 ```
 
-**Q: Can I run LocalPass in scripts without prompts?**
+**Q: Can I run LocalPass in scripts without prompts?**  
 A: Yes, use JSON format and pipe passwords:
 ```bash
 echo "masterpass" | uv run localpass get service --format json
 ```
 
-## =� License
+## :page_facing_up: License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## > Contributing
+## :handshake: Contributing
 
 1. Fork the repository
 2. Create a feature branch (`./scripts/create-new-feature.sh "description"`)
@@ -675,7 +675,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 5. Ensure all tests pass
 6. Submit a pull request
 
-## =� Support
+## :telephone_receiver: Support
 
 - **Issues**: Report bugs via GitHub Issues
 - **Documentation**: This README and inline help (`--help`)
@@ -683,4 +683,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**LocalPass** - Simple. Secure. Scriptable. =
+**LocalPass** - Simple. Secure. Scriptable. :lock:
