@@ -20,6 +20,23 @@ LocalPass is a production-ready password manager that prioritizes security, simp
 
 ### Installation
 
+#### Install from GitHub with UV (Recommended)
+
+UV is a fast Python package installer and resolver. You can install LocalPass directly from GitHub:
+
+```bash
+# Install directly from GitHub using uvx (no clone needed)
+uvx --from git+https://github.com/DustyPolk/localpass.git localpass --help
+
+# Or install globally with uv
+uv tool install git+https://github.com/DustyPolk/localpass.git
+
+# Then use directly
+localpass --help
+```
+
+#### Install from Source
+
 ```bash
 # Clone the repository
 git clone https://github.com/DustyPolk/localpass.git
@@ -30,6 +47,22 @@ uv sync
 
 # Or install with pip
 pip install -e .
+```
+
+#### Using with UV in Development
+
+If you've cloned the repository, you can run LocalPass using UV without installing:
+
+```bash
+# Run any command with uv run
+uv run localpass --help
+uv run localpass init
+uv run localpass add github --username myuser
+
+# Or activate the virtual environment
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+localpass --help
 ```
 
 ### Initialize Your Password Manager
