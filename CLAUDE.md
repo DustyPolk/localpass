@@ -80,11 +80,39 @@ Scripts follow consistent patterns:
 3. **Template-Based**: Use provided templates for consistency
 4. **Path Management**: Use common functions for all path operations
 
+## Current Feature: Secure CLI Password Manager (001-create-a-secure)
+
+### Technology Stack
+- **Language**: Python 3.13+
+- **CLI Framework**: Typer + Rich (modern, type-safe CLI with enhanced formatting)
+- **Cryptography**: 
+  - AES-256-GCM for password encryption (PyCryptodome)
+  - Argon2id for master password hashing
+  - PBKDF2 for key derivation
+- **Database**: SQLite with field-level encryption
+- **Testing**: pytest with fixture-based testing
+
+### Security Architecture
+- Master password authentication with session timeout (15 min)
+- Field-level encryption (passwords + notes only)
+- Secure memory handling with bytearray and explicit zeroing
+- Cross-platform secure storage following OS conventions
+
+### Key Dependencies
+```toml
+dependencies = [
+    "typer[all]>=0.12.0",
+    "rich>=13.7.0", 
+    "cryptography>=41.0.0",
+    "pyperclip>=1.8.2"
+]
+```
+
 ## Python Configuration
 
 - Python 3.13+ required (`requires-python = ">=3.13"`)
 - Project uses pyproject.toml for configuration
-- Currently no dependencies specified
+- Security-focused dependencies for cryptographic operations
 
 ## Important Notes
 
