@@ -1,0 +1,38 @@
+{
+  "scan_type": "static_analysis",
+  "target_path": "/home/dustin/localpass",
+  "findings_count": 1,
+  "findings": [
+    {
+      "id": "0063ea2d-7e1c-4cd1-9b72-3162adaf866e",
+      "severity": "Medium",
+      "cvss_score": 5.0,
+      "cwe_id": null,
+      "owasp_category": null,
+      "title": "Semgrep: python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query",
+      "description": "Avoiding SQL string concatenation: untrusted input concatenated with raw SQL query can result in SQL Injection. In order to execute raw query safely, prepared statement should be used. SQLAlchemy provides TextualSQL to easily used prepared statement with named parameters. For complex SQL composition, use SQL Expression Language or Schema Definition Language. In most cases, SQLAlchemy ORM will be a better option.",
+      "file_path": "/home/dustin/localpass/src/services/password_service.py",
+      "line_number": 307,
+      "code_snippet": null,
+      "impact": null,
+      "exploit_scenario": null,
+      "remediation": "",
+      "references": [
+        "https://docs.sqlalchemy.org/en/14/core/tutorial.html#using-textual-sql",
+        "https://www.tutorialspoint.com/sqlalchemy/sqlalchemy_quick_guide.htm",
+        "https://docs.sqlalchemy.org/en/14/core/tutorial.html#using-more-specific-text-with-table-expression-literal-column-and-expression-column"
+      ],
+      "discovered_by": "semgrep",
+      "discovered_at": "2025-09-12T00:06:38.263593",
+      "status": "Open"
+    }
+  ],
+  "errors": [
+    "Bandit scan failed: Bandit failed: [main]\tINFO\tFound project level .bandit file: /home/dustin/localpass/.bandit\n[utils]\tWARNING\tUnable to parse config file /home/dustin/localpass/.bandit or missing [bandit] section\n[config]\tERROR\texpected '<document start>', but found '<scalar>'\n  in \".bandit\", line 3, column 1\n[main]\tERROR\t.bandit : Error parsing file.\n"
+  ],
+  "generated_at": "2025-09-12T00:06:38.264578",
+  "tools_used": [
+    "bandit",
+    "semgrep"
+  ]
+}
