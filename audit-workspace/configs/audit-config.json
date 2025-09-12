@@ -1,0 +1,52 @@
+{
+  "scan_types": [
+    "static_analysis",
+    "dependency_scan", 
+    "crypto_validation",
+    "config_review"
+  ],
+  "severity_threshold": "Info",
+  "exclude_paths": [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "audit-workspace",
+    ".pytest_cache",
+    "build",
+    "dist"
+  ],
+  "output_formats": [
+    "json",
+    "html", 
+    "markdown"
+  ],
+  "static_analysis": {
+    "tools": ["bandit", "semgrep"],
+    "bandit_config": ".bandit",
+    "custom_rules": true
+  },
+  "dependency_scan": {
+    "tools": ["safety", "pip-audit"],
+    "check_lockfile": true,
+    "ignore_vulns": []
+  },
+  "crypto_validation": {
+    "standards": ["NIST", "OWASP"],
+    "min_key_sizes": {
+      "aes": 256,
+      "rsa": 2048,
+      "ecdsa": 256
+    },
+    "argon2_params": {
+      "memory": 102400,
+      "iterations": 3,
+      "parallelism": 8
+    },
+    "pbkdf2_min_iterations": 600000
+  },
+  "compliance_frameworks": [
+    "OWASP_Top_10_2021",
+    "NIST_CSF",
+    "CWE_Top_25"
+  ]
+}
