@@ -16,6 +16,7 @@ from src.services.master_password_service import MasterPasswordService
 from src.services.auth_service import AuthenticationService
 from src.services.password_service import PasswordService
 from src.models.master_credential import MasterCredential
+from src.cli.decorators import require_session, optional_session
 
 # Initialize Typer app
 app = typer.Typer(
@@ -228,6 +229,7 @@ def auth(
 
 
 @app.command()
+@require_session
 def add(
     service: str = typer.Argument(help="Service name"),
     username: str = typer.Option(..., "--username", "-u", help="Username for service"),
@@ -236,7 +238,8 @@ def add(
     url: Optional[str] = typer.Option(None, "--url", help="Service URL"),
     notes: Optional[str] = typer.Option(None, "--notes", help="Additional notes"),
     format: str = FormatOption,
-    quiet: bool = QuietOption
+    quiet: bool = QuietOption,
+    session=None  # Injected by decorator
 ) -> None:
     """Add a new password entry."""
     try:
@@ -254,27 +257,8 @@ def add(
                 console.print(f"[red]✗[/red] {error_msg}")
             sys.exit(1)
         
-        # Authenticate user (create temporary session)
-        if not quiet and format != "json":
-            console.print("Authentication required to add password...")
-        
-        try:
-            master_password = getpass.getpass("Master password: ")
-        except KeyboardInterrupt:
-            if format != "json":
-                console.print("\nOperation cancelled.")
-            sys.exit(1)
-        
-        # Authenticate with short session
-        success, session, error_msg = auth_service.authenticate(master_password, 5)
-        
-        if not success or not session:
-            if format == "json":
-                error_output = {"status": "error", "error_code": "AUTHENTICATION_FAILED", "message": error_msg}
-                print(json.dumps(error_output))
-            else:
-                console.print(f"[red]✗[/red] {error_msg}")
-            sys.exit(2)
+        # Session is already authenticated by decorator
+        # session parameter contains the valid session
         
         # Get or generate password
         if generate:
@@ -354,13 +338,15 @@ def add(
 
 
 @app.command()
+@require_session
 def get(
     service: str = typer.Argument(help="Service name to retrieve"),
     username: Optional[str] = typer.Option(None, "--username", "-u", help="Specific username (optional)"),
     copy: bool = typer.Option(False, "--copy", "-c", help="Copy password to clipboard"),
     show: bool = typer.Option(False, "--show", "-s", help="Show password in output"),
     format: str = FormatOption,
-    quiet: bool = QuietOption
+    quiet: bool = QuietOption,
+    session=None  # Injected by decorator
 ) -> None:
     """Get password for a service."""
     try:
@@ -378,27 +364,8 @@ def get(
                 console.print(f"[red]✗[/red] {error_msg}")
             sys.exit(1)
         
-        # Authenticate user
-        if not quiet and format != "json":
-            console.print("Authentication required to retrieve password...")
-        
-        try:
-            master_password = getpass.getpass("Master password: ")
-        except KeyboardInterrupt:
-            if format != "json":
-                console.print("\nOperation cancelled.")
-            sys.exit(1)
-        
-        # Authenticate with short session
-        success, session, error_msg = auth_service.authenticate(master_password, 5)
-        
-        if not success or not session:
-            if format == "json":
-                error_output = {"status": "error", "error_code": "AUTHENTICATION_FAILED", "message": error_msg}
-                print(json.dumps(error_output))
-            else:
-                console.print(f"[red]✗[/red] {error_msg}")
-            sys.exit(2)
+        # Session is already authenticated by decorator
+        # session parameter contains the valid session
         
         # Retrieve password entries
         success, entries, error_msg = password_service.get_password(session, service, username)
@@ -530,11 +497,13 @@ def get(
 
 
 @app.command()
+@require_session
 def list_passwords(
     service_pattern: Optional[str] = typer.Option(None, "--service", "-s", help="Service name pattern (supports *)"),
     limit: int = typer.Option(50, "--limit", "-l", help="Maximum entries to show"),
     format: str = FormatOption,
-    quiet: bool = QuietOption
+    quiet: bool = QuietOption,
+    session=None  # Injected by decorator
 ) -> None:
     """List password entries."""
     try:
@@ -552,27 +521,8 @@ def list_passwords(
                 console.print(f"[red]✗[/red] {error_msg}")
             sys.exit(1)
         
-        # Authenticate user
-        if not quiet and format != "json":
-            console.print("Authentication required to list passwords...")
-        
-        try:
-            master_password = getpass.getpass("Master password: ")
-        except KeyboardInterrupt:
-            if format != "json":
-                console.print("\nOperation cancelled.")
-            sys.exit(1)
-        
-        # Authenticate with short session
-        success, session, error_msg = auth_service.authenticate(master_password, 5)
-        
-        if not success or not session:
-            if format == "json":
-                error_output = {"status": "error", "error_code": "AUTHENTICATION_FAILED", "message": error_msg}
-                print(json.dumps(error_output))
-            else:
-                console.print(f"[red]✗[/red] {error_msg}")
-            sys.exit(2)
+        # Session is already authenticated by decorator
+        # session parameter contains the valid session
         
         # List entries
         success, entries, error_msg = password_service.list_passwords(session, service_pattern, limit)
@@ -635,6 +585,7 @@ def list_passwords(
 
 
 @app.command()
+@require_session
 def update(
     service: str = typer.Argument(help="Service name to update"),
     username: str = typer.Argument(help="Username to update"),
@@ -644,7 +595,8 @@ def update(
     generate: bool = typer.Option(False, "--generate", "-g", help="Generate new secure password"),
     length: int = typer.Option(16, "--length", "-l", help="Generated password length"),
     format: str = FormatOption,
-    quiet: bool = QuietOption
+    quiet: bool = QuietOption,
+    session=None  # Injected by decorator
 ) -> None:
     """Update an existing password entry."""
     try:
@@ -662,27 +614,8 @@ def update(
                 console.print(f"[red]✗[/red] {error_msg}")
             sys.exit(1)
         
-        # Authenticate user
-        if not quiet and format != "json":
-            console.print("Authentication required to update password...")
-        
-        try:
-            master_password = getpass.getpass("Master password: ")
-        except KeyboardInterrupt:
-            if format != "json":
-                console.print("\nOperation cancelled.")
-            sys.exit(1)
-        
-        # Authenticate with short session
-        success, session, error_msg = auth_service.authenticate(master_password, 5)
-        
-        if not success or not session:
-            if format == "json":
-                error_output = {"status": "error", "error_code": "AUTHENTICATION_FAILED", "message": error_msg}
-                print(json.dumps(error_output))
-            else:
-                console.print(f"[red]✗[/red] {error_msg}")
-            sys.exit(2)
+        # Session is already authenticated by decorator
+        # session parameter contains the valid session
         
         # Handle password update
         new_password = password
@@ -781,12 +714,14 @@ def update(
 
 
 @app.command()
+@require_session
 def delete(
     service: str = typer.Argument(help="Service name to delete"),
     username: str = typer.Argument(help="Username to delete"),
     force: bool = typer.Option(False, "--force", help="Skip confirmation prompt"),
     format: str = FormatOption,
-    quiet: bool = QuietOption
+    quiet: bool = QuietOption,
+    session=None  # Injected by decorator
 ) -> None:
     """Delete a password entry."""
     try:
@@ -804,27 +739,8 @@ def delete(
                 console.print(f"[red]✗[/red] {error_msg}")
             sys.exit(1)
         
-        # Authenticate user
-        if not quiet and format != "json":
-            console.print("Authentication required to delete password...")
-        
-        try:
-            master_password = getpass.getpass("Master password: ")
-        except KeyboardInterrupt:
-            if format != "json":
-                console.print("\nOperation cancelled.")
-            sys.exit(1)
-        
-        # Authenticate with short session
-        success, session, error_msg = auth_service.authenticate(master_password, 5)
-        
-        if not success or not session:
-            if format == "json":
-                error_output = {"status": "error", "error_code": "AUTHENTICATION_FAILED", "message": error_msg}
-                print(json.dumps(error_output))
-            else:
-                console.print(f"[red]✗[/red] {error_msg}")
-            sys.exit(2)
+        # Session is already authenticated by decorator
+        # session parameter contains the valid session
         
         # Confirmation prompt (unless forced or JSON mode)
         if not force and format != "json":
@@ -877,11 +793,13 @@ def delete(
 
 
 @app.command()
+@require_session
 def search(
     term: str = typer.Argument(help="Search term"),
     limit: int = typer.Option(25, "--limit", "-l", help="Maximum results to show"),
     format: str = FormatOption,
-    quiet: bool = QuietOption
+    quiet: bool = QuietOption,
+    session=None  # Injected by decorator
 ) -> None:
     """Search password entries by service name or username."""
     try:
@@ -899,27 +817,8 @@ def search(
                 console.print(f"[red]✗[/red] {error_msg}")
             sys.exit(1)
         
-        # Authenticate user
-        if not quiet and format != "json":
-            console.print("Authentication required to search passwords...")
-        
-        try:
-            master_password = getpass.getpass("Master password: ")
-        except KeyboardInterrupt:
-            if format != "json":
-                console.print("\nOperation cancelled.")
-            sys.exit(1)
-        
-        # Authenticate with short session
-        success, session, error_msg = auth_service.authenticate(master_password, 5)
-        
-        if not success or not session:
-            if format == "json":
-                error_output = {"status": "error", "error_code": "AUTHENTICATION_FAILED", "message": error_msg}
-                print(json.dumps(error_output))
-            else:
-                console.print(f"[red]✗[/red] {error_msg}")
-            sys.exit(2)
+        # Session is already authenticated by decorator
+        # session parameter contains the valid session
         
         # Search entries
         success, entries, error_msg = password_service.search_passwords(session, term, limit)
@@ -979,6 +878,177 @@ def search(
             print(json.dumps(error_output))
         else:
             console.print(f"[red]✗[/red] Failed to search passwords: {e}")
+        sys.exit(1)
+
+
+@app.command(name="login")
+def login_command(
+    timeout: int = typer.Option(15, "--timeout", help="Session timeout in minutes"),
+    format: str = FormatOption,
+    quiet: bool = QuietOption
+) -> None:
+    """Login and create a new session."""
+    try:
+        auth_service = AuthenticationService()
+        
+        if not quiet and format != "json":
+            console.print("Enter master password to create session...")
+        
+        try:
+            password = getpass.getpass("Master password: ")
+        except KeyboardInterrupt:
+            if format == "json":
+                error_output = {
+                    "status": "error",
+                    "error_code": "AUTHENTICATION_CANCELLED",
+                    "message": "Authentication cancelled"
+                }
+                print(json.dumps(error_output))
+            else:
+                console.print("\nAuthentication cancelled.")
+            sys.exit(1)
+        
+        # Authenticate and create session
+        success, session, error_msg = auth_service.authenticate(password, timeout)
+        
+        if success and session:
+            if format == "json":
+                output = {
+                    "status": "success",
+                    "action": "login",
+                    "session_id": session.id,
+                    "expires_in_minutes": session.get_remaining_minutes(),
+                    "username": session.username
+                }
+                print(json.dumps(output))
+            else:
+                console.print(f"[green]✓[/green] Authentication successful.")
+                console.print(f"Session created with ID: {session.id[:8]}...")
+                console.print(f"Session valid for {session.get_remaining_minutes()} minutes.")
+        else:
+            if format == "json":
+                error_output = {
+                    "status": "error",
+                    "error_code": "AUTHENTICATION_FAILED",
+                    "message": error_msg or "Authentication failed"
+                }
+                print(json.dumps(error_output))
+            else:
+                console.print(f"[red]✗[/red] {error_msg or 'Authentication failed'}")
+            sys.exit(2)
+            
+    except Exception as e:
+        if format == "json":
+            error_output = {"status": "error", "error_code": "LOGIN_FAILED", "message": str(e)}
+            print(json.dumps(error_output))
+        else:
+            console.print(f"[red]✗[/red] Login failed: {e}")
+        sys.exit(1)
+
+
+@app.command(name="logout")
+@optional_session
+def logout_command(
+    format: str = FormatOption,
+    quiet: bool = QuietOption,
+    session=None
+) -> None:
+    """Logout and terminate current session."""
+    try:
+        auth_service = AuthenticationService()
+        
+        if session and session.is_active():
+            # Terminate the session
+            success = auth_service.logout(session.id)
+            
+            if success:
+                if format == "json":
+                    output = {
+                        "status": "success",
+                        "action": "logout",
+                        "message": "Session terminated successfully"
+                    }
+                    print(json.dumps(output))
+                else:
+                    if not quiet:
+                        console.print("[green]✓[/green] Session terminated successfully.")
+            else:
+                if format == "json":
+                    error_output = {
+                        "status": "error",
+                        "error_code": "LOGOUT_FAILED",
+                        "message": "Failed to terminate session"
+                    }
+                    print(json.dumps(error_output))
+                else:
+                    console.print("[red]✗[/red] Failed to terminate session.")
+                sys.exit(1)
+        else:
+            if format == "json":
+                output = {
+                    "status": "success",
+                    "action": "logout",
+                    "message": "No active session found"
+                }
+                print(json.dumps(output))
+            else:
+                if not quiet:
+                    console.print("[yellow]No active session found.[/yellow]")
+                    
+    except Exception as e:
+        if format == "json":
+            error_output = {"status": "error", "error_code": "LOGOUT_FAILED", "message": str(e)}
+            print(json.dumps(error_output))
+        else:
+            console.print(f"[red]✗[/red] Logout failed: {e}")
+        sys.exit(1)
+
+
+@app.command(name="status")
+@optional_session
+def status_command(
+    format: str = FormatOption,
+    quiet: bool = QuietOption,
+    session=None
+) -> None:
+    """Check current session status."""
+    try:
+        if session and session.is_active():
+            remaining_minutes = session.get_remaining_minutes()
+            
+            if format == "json":
+                output = {
+                    "status": "active",
+                    "session_id": session.id,
+                    "username": session.username,
+                    "created_at": session.created_at.isoformat(),
+                    "last_activity_at": session.last_activity_at.isoformat(),
+                    "expires_at": session.expires_at.isoformat(),
+                    "remaining_minutes": remaining_minutes
+                }
+                print(json.dumps(output))
+            else:
+                console.print("[green]Session Active[/green]")
+                console.print(f"Session ID: {session.id[:8]}...")
+                console.print(f"Username: {session.username}")
+                console.print(f"Expires in: {remaining_minutes} minutes")
+                console.print(f"Created: {session.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        else:
+            if format == "json":
+                output = {
+                    "status": "no_session",
+                    "message": "No active session found"
+                }
+                print(json.dumps(output))
+            else:
+                console.print("[yellow]No active session found.[/yellow]")
+                
+    except Exception as e:
+        if format == "json":
+            error_output = {"status": "error", "error_code": "STATUS_CHECK_FAILED", "message": str(e)}
+            print(json.dumps(error_output))
+        else:
+            console.print(f"[red]✗[/red] Status check failed: {e}")
         sys.exit(1)
 
 

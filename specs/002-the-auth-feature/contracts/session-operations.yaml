@@ -1,0 +1,260 @@
+openapi: 3.0.0
+info:
+  title: LocalPass Session Management API
+  description: Internal API contracts for session operations
+  version: 1.0.0
+
+paths:
+  /session/create:
+    post:
+      summary: Create new authenticated session
+      operationId: createSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 1024
+                timeout_minutes:
+                  type: integer
+                  default: 15
+                  minimum: 15
+                  maximum: 15
+      responses:
+        '200':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '423':
+          description: Account locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /session/validate:
+    post:
+      summary: Validate existing session
+      operationId: validateSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - session_id
+              properties:
+                session_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Session valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '401':
+          description: Session invalid or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /session/extend:
+    post:
+      summary: Extend session timeout
+      operationId: extendSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - session_id
+              properties:
+                session_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Session extended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '401':
+          description: Session invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /session/terminate:
+    post:
+      summary: Terminate session (logout)
+      operationId: terminateSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - session_id
+              properties:
+                session_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Session terminated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  terminated_at:
+                    type: string
+                    format: date-time
+        '404':
+          description: Session not found
+
+  /session/persist:
+    post:
+      summary: Persist session to encrypted file
+      operationId: persistSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionData'
+      responses:
+        '200':
+          description: Session persisted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  file_path:
+                    type: string
+                  encrypted:
+                    type: boolean
+        '500':
+          description: Persistence failed
+
+  /session/load:
+    get:
+      summary: Load session from encrypted file
+      operationId: loadSession
+      responses:
+        '200':
+          description: Session loaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionData'
+        '404':
+          description: No persisted session found
+        '401':
+          description: Session expired or invalid
+
+components:
+  schemas:
+    SessionResponse:
+      type: object
+      required:
+        - session_id
+        - username
+        - created_at
+        - expires_at
+        - remaining_seconds
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        last_activity_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        remaining_seconds:
+          type: integer
+          minimum: 0
+          maximum: 900
+
+    SessionData:
+      type: object
+      required:
+        - session_id
+        - username
+        - created_at
+        - last_activity_at
+        - expires_at
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        last_activity_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        checksum:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+        remaining_attempts:
+          type: integer
+          minimum: 0
+          maximum: 5

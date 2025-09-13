@@ -78,6 +78,9 @@ class AuthenticationService:
                 idle_timeout=timeout_minutes
             )
             
+            # Persist the session
+            self.session_service.persist_session(session)
+            
             return True, session, None
             
         except Exception as e:

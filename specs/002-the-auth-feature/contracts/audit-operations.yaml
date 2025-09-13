@@ -1,0 +1,166 @@
+openapi: 3.0.0
+info:
+  title: LocalPass Audit Logging API
+  description: Internal API contracts for audit logging operations
+  version: 1.0.0
+
+paths:
+  /audit/log:
+    post:
+      summary: Log authentication event
+      operationId: logAuthEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthEventRequest'
+      responses:
+        '201':
+          description: Event logged successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthEventResponse'
+        '400':
+          description: Invalid event data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /audit/query:
+    get:
+      summary: Query audit events
+      operationId: queryAuditEvents
+      parameters:
+        - name: username
+          in: query
+          schema:
+            type: string
+        - name: event_type
+          in: query
+          schema:
+            $ref: '#/components/schemas/EventType'
+        - name: from_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+      responses:
+        '200':
+          description: Events retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuthEvent'
+                  total:
+                    type: integer
+                  has_more:
+                    type: boolean
+
+components:
+  schemas:
+    EventType:
+      type: string
+      enum:
+        - LOGIN_ATTEMPT
+        - LOGIN_SUCCESS
+        - LOGIN_FAILURE
+        - SESSION_CREATED
+        - SESSION_EXTENDED
+        - SESSION_EXPIRED
+        - SESSION_TERMINATED
+        - SESSION_VALIDATED
+        - SESSION_INVALID
+
+    AuthEventRequest:
+      type: object
+      required:
+        - event_type
+        - username
+        - success
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          nullable: true
+        event_type:
+          $ref: '#/components/schemas/EventType'
+        username:
+          type: string
+          minLength: 1
+        details:
+          type: object
+          additionalProperties: true
+        success:
+          type: boolean
+
+    AuthEventResponse:
+      type: object
+      required:
+        - event_id
+        - logged_at
+      properties:
+        event_id:
+          type: string
+          format: uuid
+        logged_at:
+          type: string
+          format: date-time
+
+    AuthEvent:
+      type: object
+      required:
+        - id
+        - event_type
+        - timestamp
+        - username
+        - success
+      properties:
+        id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+          nullable: true
+        event_type:
+          $ref: '#/components/schemas/EventType'
+        timestamp:
+          type: string
+          format: date-time
+        username:
+          type: string
+        details:
+          type: object
+        success:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
