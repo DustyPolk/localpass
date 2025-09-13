@@ -41,9 +41,11 @@ class Session:
         except ValueError:
             raise ValueError("Session ID must be a valid UUID4")
         
-        # Derived key validation
-        if not isinstance(self.derived_key, bytes) or len(self.derived_key) != 32:
-            raise ValueError("Derived key must be exactly 32 bytes")
+        # Derived key validation - allow empty bytes for loaded sessions
+        if not isinstance(self.derived_key, (bytes, bytearray)):
+            raise ValueError("Derived key must be bytes or bytearray")
+        if len(self.derived_key) != 0 and len(self.derived_key) != 32:
+            raise ValueError("Derived key must be exactly 32 bytes or empty")
         
         # Timeout validation
         if not (1 <= self.idle_timeout_minutes <= 120):

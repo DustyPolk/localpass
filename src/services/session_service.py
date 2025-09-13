@@ -1,20 +1,30 @@
 """Session Service.
 
-Handles authenticated user sessions with timeout management.
+Handles authenticated user sessions with timeout management and persistence.
 """
 from datetime import datetime, timedelta
 from typing import Optional, Dict
 from src.models.session import Session
+from src.services.storage.session_storage_service import SessionStorageService
+from src.services.audit_service import AuditService
+from src.services.memory_security_service import MemorySecurityService
 
 
 class SessionService:
     """Service for managing authenticated user sessions."""
     
-    def __init__(self):
+    def __init__(self, storage_service: Optional[SessionStorageService] = None,
+                 audit_service: Optional[AuditService] = None,
+                 memory_service: Optional[MemorySecurityService] = None):
         """Initialize session service."""
         self.active_sessions: Dict[str, Session] = {}
         self.default_timeout = 15  # minutes
         self.max_session_hours = 4
+        
+        # Initialize services
+        self.storage_service = storage_service or SessionStorageService()
+        self.audit_service = audit_service or AuditService()
+        self.memory_service = memory_service or MemorySecurityService()
     
     def create_session(self, username: str, derived_key: bytes, 
                       idle_timeout: int = None, max_hours: int = None) -> Session:
@@ -280,3 +290,225 @@ class SessionService:
         self.active_sessions.clear()
         
         return count
+    
+    def persist_session(self, session: Session) -> bool:
+        """Persist session to storage.
+        
+        Args:
+            session: Session to persist
+            
+        Returns:
+            True if persistence succeeded, False otherwise
+        """
+        try:
+            result = self.storage_service.persist_session(session)
+            
+            # Log audit event
+            self.audit_service.log_event(
+                event_type="SESSION_PERSISTED",
+                username=session.username,
+                session_id=session.id,
+                success=True,
+                details={'file_path': result.get('file_path')}
+            )
+            
+            return True
+        except Exception:
+            return False
+    
+    def load_existing_session(self) -> Optional[Session]:
+        """Load existing session from storage.
+        
+        Returns:
+            Session if found and valid, None otherwise
+        """
+        try:
+            session = self.storage_service.load_session()
+            
+            if session and session.is_active():
+                # Add to active sessions (but with empty key - needs to be set elsewhere)
+                self.active_sessions[session.id] = session
+                
+                # Log audit event
+                self.audit_service.log_event(
+                    event_type="SESSION_LOADED",
+                    username=session.username,
+                    session_id=session.id,
+                    success=True
+                )
+                
+                return session
+            
+            return None
+            
+        except Exception:
+            return None
+    
+    def extend_session(self, session_id: str) -> Optional[Session]:
+        """Extend session timeout (rolling timeout).
+        
+        Args:
+            session_id: Session ID to extend
+            
+        Returns:
+            Extended session or None if not found/expired
+        """
+        session = self.get_session(session_id)
+        
+        if not session:
+            # Try to load from storage
+            stored_session = self.load_existing_session()
+            if stored_session and stored_session.id == session_id:
+                session = stored_session
+            else:
+                return None
+        
+        if not session.is_active():
+            # Session expired, log event
+            self.audit_service.log_event(
+                event_type="SESSION_EXPIRED",
+                username=session.username,
+                session_id=session_id,
+                success=False,
+                details={'reason': 'timeout_expired'}
+            )
+            
+            # Clean up expired session
+            self._cleanup_session(session)
+            return None
+        
+        # Update activity time
+        session.update_activity()
+        
+        # Persist the updated session
+        self.persist_session(session)
+        
+        # Log extension event
+        self.audit_service.log_event(
+            event_type="SESSION_EXTENDED",
+            username=session.username,
+            session_id=session_id,
+            success=True
+        )
+        
+        return session
+    
+    def validate_session(self, session_id: str) -> Optional[Session]:
+        """Validate session and update activity timestamp.
+        
+        Args:
+            session_id: Session identifier to validate
+            
+        Returns:
+            Valid session or None if expired/invalid
+        """
+        # First check in-memory sessions
+        session = self.get_session(session_id)
+        
+        # If not in memory, try to load from storage
+        if not session:
+            session = self.load_existing_session()
+            if session and session.id != session_id:
+                session = None
+        
+        if not session:
+            return None
+        
+        # Check if still active
+        if not session.is_active():
+            # Session expired
+            self.audit_service.log_event(
+                event_type="SESSION_EXPIRED",
+                username=session.username,
+                session_id=session_id,
+                success=False
+            )
+            
+            # Clean up
+            self._cleanup_session(session)
+            return None
+        
+        # Update activity and persist
+        session.update_activity()
+        self.persist_session(session)
+        
+        # Log validation event
+        self.audit_service.log_event(
+            event_type="SESSION_VALIDATED",
+            username=session.username,
+            session_id=session_id,
+            success=True
+        )
+        
+        return session
+    
+    def terminate_session(self, session_id: str) -> bool:
+        """Terminate session and clean up.
+        
+        Args:
+            session_id: Session ID to terminate
+            
+        Returns:
+            True if session was terminated, False if not found
+        """
+        session = self.get_session(session_id)
+        
+        # Also try to load from storage if not in memory
+        if not session:
+            stored_session = self.load_existing_session()
+            if stored_session and stored_session.id == session_id:
+                session = stored_session
+        
+        if not session:
+            return False
+        
+        # Log termination event
+        self.audit_service.log_event(
+            event_type="SESSION_TERMINATED",
+            username=session.username,
+            session_id=session_id,
+            success=True,
+            details={'reason': 'manual_logout'}
+        )
+        
+        # Clean up session
+        self._cleanup_session(session)
+        
+        return True
+    
+    def get_current_session(self) -> Optional[Session]:
+        """Get the current active session (if any).
+        
+        Returns:
+            Current session or None if no active session exists
+        """
+        # Try to load from storage first
+        session = self.load_existing_session()
+        
+        if session and session.is_active():
+            return session
+        
+        return None
+    
+    def _cleanup_session(self, session: Session) -> None:
+        """Clean up session resources.
+        
+        Args:
+            session: Session to clean up
+        """
+        # Remove from active sessions
+        if session.id in self.active_sessions:
+            del self.active_sessions[session.id]
+        
+        # Clear sensitive memory
+        if isinstance(session.derived_key, bytearray):
+            self.memory_service.secure_clear(session.derived_key)
+        else:
+            # Try to zero the key
+            session.zero_key()
+        
+        # Delete persisted session
+        try:
+            self.storage_service.delete_session()
+        except Exception:
+            pass  # Best effort cleanup

@@ -80,13 +80,23 @@ Scripts follow consistent patterns:
 3. **Template-Based**: Use provided templates for consistency
 4. **Path Management**: Use common functions for all path operations
 
-## Current Feature: Secure CLI Password Manager (001-create-a-secure)
+## Current Feature: Fix and Secure 15-Minute Authentication Session (002-the-auth-feature)
+
+### Issue Being Fixed
+The authentication session feature that should keep users authenticated for 15 minutes is not working. Sessions are not persisting between CLI command invocations.
+
+### Implementation Focus
+- **Session Persistence**: Implement secure file-based session storage
+- **Rolling Timeout**: Each action extends session by 15 minutes
+- **Security Hardening**: Encrypted session files with 0600 permissions
+- **Audit Logging**: Track all authentication events
+- **Memory Security**: Clear sensitive data with explicit zeroing
 
 ### Technology Stack
 - **Language**: Python 3.13+
 - **CLI Framework**: Typer + Rich (modern, type-safe CLI with enhanced formatting)
 - **Cryptography**: 
-  - AES-256-GCM for password encryption (PyCryptodome)
+  - AES-256-GCM for session file encryption
   - Argon2id for master password hashing
   - PBKDF2 for key derivation
 - **Database**: SQLite with field-level encryption
@@ -94,9 +104,11 @@ Scripts follow consistent patterns:
 
 ### Security Architecture
 - Master password authentication with session timeout (15 min)
+- Session files stored with platform-specific paths (XDG compliance)
 - Field-level encryption (passwords + notes only)
 - Secure memory handling with bytearray and explicit zeroing
 - Cross-platform secure storage following OS conventions
+- Audit logging in JSON Lines format
 
 ### Key Dependencies
 ```toml
