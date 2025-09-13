@@ -2,7 +2,7 @@
 
 **A secure, minimalist CLI password manager following Unix philosophy**
 
-LocalPass is a production-ready password manager that prioritizes security, simplicity, and scriptability. Built with enterprise-grade cryptography and designed for both human users and automation scripts.
+LocalPass is a password manager that prioritizes security, simplicity, and scriptability. Built with enterprise-grade cryptography and designed for both human users and automation scripts.
 
 ## :sparkles: Features
 
